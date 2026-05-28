@@ -1,60 +1,49 @@
+```python
 import streamlit as st
 import requests
-from gtts import gTTS
+import asyncio
 import base64
+import edge_tts
 import io
-import re  # Pustaka tambahan untuk membersihkan simbol gaib (Regular Expression)
 
 # 1. KONFIGURASI HALAMAN UTAMA (TEMA CERIA RAMAH ANAK)
 st.set_page_config(page_title="Robot Pintar V2", page_icon="🤖", layout="centered")
 
-# Menggunakan gambar diam yang sudah Anda upload di rumah GitHub Anda
+# Menggunakan gambar diam dari rumah GitHub Anda
 LINK_GAMBAR_DONI = "doni.png"
 
 # =========================================================================
 # 2. ALAMAT BACKEND CLOUDFLARE WORKER ANDA
 # =========================================================================
-WORKER_URL = "https://purple-surf-7511.muhammadridhoashari01.workers.dev"
+WORKER_URL = "https://purple-surf-7511.muhammadridhoashari01.workers.dev/"
 # =========================================================================
 
 # 3. INISIALISASI MEMORI CHAT AGAR RIWAYAT TIDAK HILANG
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- FUNGSI PEMBERSIH TEKS GAIB SEBELUM JADI SUARA ---
-def bersihkan_teks_untuk_suara(teks):
-    try:
-        # 1. Hapus tanda bintang (pembuka/penutup bold: ***)
-        teks_bersih = re.sub(r'\*', '', teks)
-        
-        # 2. Hapus tanda hubung pada kata ulang (ganti jadi spasi agar dibaca lancar)
-        # Contoh: 'anak-anak' jadi 'anak anak'
-        teks_bersih = re.sub(r'-', ' ', teks_bersih)
-        
-        # 3. Hapus emoji (karakter khusus Unicode)
-        # Ini penting agar gTTS tidak bingung membaca simbol gambar
-        teks_bersih = re.sub(r'[^\x00-\x7F]+', ' ', teks_bersih)
-        
-        # 4. Hapus spasi berlebihan
-        teks_bersih = re.sub(r'\s+', ' ', teks_bersih).strip()
-        
-        return teks_bersih
-    except:
-        return teks # Jika gagal bersihkan, kembalikan teks asli
+# --- FUNGSI GENERATE SUARA MICROSOFT EDGE-TTS (ASYNCHRONOUS) ---
+async def generate_edge_audio(text):
+    # Menggunakan suara pria Indonesia 'Ardi' yang sangat natural untuk karakter Doni
+    VOICE = "id-ID-ArdiNeural"
+    communicate = edge_tts.Communicate(text, VOICE)
+    
+    # Simpan hasil stream audio ke dalam memori
+    audio_data = b""
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            audio_data += chunk["data"]
+            
+    return audio_data
 
-# FUNGSI SUPAYA SUARA DONI LANGSUNG BUNYI OTOMATIS SAAT JAWABAN MUNCUL
-def autoplay_audio(text_asli):
+# FUNGSI UTAMA SUPAYA SUARA LANGSUNG AUTOPLAY DI WEB
+def autoplay_audio(text):
     try:
-        # ⚡ LANGKAH VITAL: Bersihkan teks dulu sebelum dikirim ke mesin gTTS
-        teks_siap_baca = bersihkan_teks_untuk_suara(text_asli)
+        # Jalankan fungsi async edge-tts di dalam fungsi biasa Streamlit
+        audio_bytes = asyncio.run(generate_edge_audio(text))
         
-        # Kirim teks bersih ke mesin gTTS
-        tts = gTTS(text=teks_siap_baca, lang='id', slow=False)
-        fp = io.BytesIO()
-        tts.write_to_fp(fp)
-        fp.seek(0)
-        
-        b64 = base64.b64encode(fp.read()).decode()
+        # Ubah data audio menjadi format base64 agar bisa di-autoplay oleh HTML5
+        b64 = base64.b64encode(audio_bytes).decode()
         audio_html = f"""
             <audio autoplay="true">
             <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
@@ -62,7 +51,7 @@ def autoplay_audio(text_asli):
             """
         st.markdown(audio_html, unsafe_allow_html=True)
     except Exception as e:
-        pass
+        st.warning(f"Gagal memproses suara: {str(e)}")
 
 # 4. TAMPILAN BANNER UTAMA
 st.markdown("<center>", unsafe_allow_html=True)
@@ -91,17 +80,16 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
         message_placeholder = st.empty()
         message_placeholder.markdown("*Doni sedang membuka buku pintar... ⚡📚*")
         
-        # PROMPT UTAMA GURU SD (Meminta AI memberikan emoji)
         system_instruction = (
             "Kamu adalah 'Robot Pintar V2' yang berwujud seorang bocah SD pintar bernama Doni. "
             "Kamu bertugas menjadi asisten belajar interaktif siswa SD kelas 1-6 di Indonesia. "
             "Kuasai semua materi pelajaran SD (IPAS, Matematika, IPS, Sejarah, PPKn) sesuai kurikulum Indonesia.\n\n"
             "ATURAN MENJAWAB:\n"
             "1. Jawab dengan bahasa yang sangat ramah anak, ceria, penuh semangat, dan mudah dipahami.\n"
-            "2. Gunakan sapaan variatif di setiap jawaban (contoh: 'Wah hebat!', 'Pertanyaan bagus!').\n"
-            "3. Jika materi sejarah, ceritakan seperti dongeng singkat untuk menanamkan jiwa Cinta Tanah Air.\n"
-            "4. Gunakan emoji lucu (🚀, ✨, 🌈, 🧠) dan tebalkan (bold: ***) kata kunci penting.\n"
-            "5. Teks di layar harus ada emojinya, tapi jangan khawatir nanti suaranya akan dibersihkan."
+            "2. Gunakan sapaan variatif di setiap jawaban (contoh: 'Wah hebat!', 'Pertanyaan bagus, teman pintar!').\n"
+            "3. Jika materi matematika, jelaskan langkahnya memakai perumpamaan benda (buah/kue).\n"
+            "4. Jika materi sejarah, ceritakan seperti dongeng singkat yang seru untuk menanamkan jiwa Cinta Tanah Air.\n"
+            "5. Gunakan banyak emoji lucu (🚀, ✨, 🌈, 🧠) dan tebalkan (bold) kata kunci penting."
         )
         
         full_messages = [{"role": "system", "content": system_instruction}] + st.session_state.messages
@@ -123,10 +111,10 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
                 result = response.json()
                 bot_reply = result["choices"][0]["message"]["content"]
                 
-                # 1. Tampilkan teks jawaban di layar (Masih ada emojinya, biar visual anak senang)
+                # 1. Tampilkan teks jawaban di layar
                 message_placeholder.markdown(bot_reply)
                 
-                # 2. Jalankan suara otomatis secara instan (Di dalam fungsi ini teks akan dibersihkan otomatis)
+                # 2. Jalankan suara otomatis Edge-TTS secara instan
                 autoplay_audio(bot_reply)
                 
                 # 3. Simpan jawaban ke memori chat
