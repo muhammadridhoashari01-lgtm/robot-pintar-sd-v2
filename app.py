@@ -52,6 +52,20 @@ for message in st.session_state.messages:
 
 # 5. LOGIKA KOTAK INPUT UTAMA CHAT ANAK SD
 if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
+    from streamlit_mic_recorder import mic_recorder
+
+st.write("Orang tua/Siswa bisa tekan tombol di bawah jika malas mengetik:")
+audio_input = mic_recorder(
+    start_prompt="🎙️ Mulai Bicara (Doni Mendengarkan)",
+    stop_prompt="🛑 Selesai Bicara",
+    key='recorder'
+)
+
+# Jika anak selesai merekam suara
+if audio_input:
+    # Di sini kita butuh API eksternal (seperti OpenAI Whisper) untuk mengubah suara menjadi teks.
+    # Untuk prototipe awal skripsi, kita fokuskan suara keluar (Doni bicara) dulu agar sistem Cloudflare-nya stabil ya!
+    st.info("Suara Anda berhasil direkam! Fitur pengubah suara ke teks (Speech-to-Text) sedang dihubungkan.")
     
     # Tampilkan pertanyaan siswa di layar
     with st.chat_message("user"):
