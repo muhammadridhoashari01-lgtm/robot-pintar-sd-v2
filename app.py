@@ -3,6 +3,7 @@ import requests
 from gtts import gTTS
 import base64
 import io
+import re  # Pustaka tambahan untuk membersihkan simbol gaib (Regular Expression)
 
 # 1. KONFIGURASI HALAMAN UTAMA (TEMA CERIA RAMAH ANAK)
 st.set_page_config(page_title="Robot Pintar V2", page_icon="🤖", layout="centered")
@@ -20,10 +21,35 @@ WORKER_URL = "https://purple-surf-7511.muhammadridhoashari01.workers.dev"
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# FUNGSI SUPAYA SUARA DONI LANGSUNG BUNYI OTOMATIS SAAT JAWABAN MUNCUL
-def autoplay_audio(text):
+# --- FUNGSI PEMBERSIH TEKS GAIB SEBELUM JADI SUARA ---
+def bersihkan_teks_untuk_suara(teks):
     try:
-        tts = gTTS(text=text, lang='id', slow=False)
+        # 1. Hapus tanda bintang (pembuka/penutup bold: ***)
+        teks_bersih = re.sub(r'\*', '', teks)
+        
+        # 2. Hapus tanda hubung pada kata ulang (ganti jadi spasi agar dibaca lancar)
+        # Contoh: 'anak-anak' jadi 'anak anak'
+        teks_bersih = re.sub(r'-', ' ', teks_bersih)
+        
+        # 3. Hapus emoji (karakter khusus Unicode)
+        # Ini penting agar gTTS tidak bingung membaca simbol gambar
+        teks_bersih = re.sub(r'[^\x00-\x7F]+', ' ', teks_bersih)
+        
+        # 4. Hapus spasi berlebihan
+        teks_bersih = re.sub(r'\s+', ' ', teks_bersih).strip()
+        
+        return teks_bersih
+    except:
+        return teks # Jika gagal bersihkan, kembalikan teks asli
+
+# FUNGSI SUPAYA SUARA DONI LANGSUNG BUNYI OTOMATIS SAAT JAWABAN MUNCUL
+def autoplay_audio(text_asli):
+    try:
+        # ⚡ LANGKAH VITAL: Bersihkan teks dulu sebelum dikirim ke mesin gTTS
+        teks_siap_baca = bersihkan_teks_untuk_suara(text_asli)
+        
+        # Kirim teks bersih ke mesin gTTS
+        tts = gTTS(text=teks_siap_baca, lang='id', slow=False)
         fp = io.BytesIO()
         tts.write_to_fp(fp)
         fp.seek(0)
@@ -52,7 +78,7 @@ for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-# 5. LOGIKA UTAMA PERCAKAPAN CHAT (TANPA MIC RECORDER YANG ERROR)
+# 5. LOGIKA UTAMA PERCAKAPAN CHAT
 if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
     
     # Tampilkan pertanyaan siswa di layar
@@ -65,17 +91,17 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
         message_placeholder = st.empty()
         message_placeholder.markdown("*Doni sedang membuka buku pintar... ⚡📚*")
         
+        # PROMPT UTAMA GURU SD (Meminta AI memberikan emoji)
         system_instruction = (
             "Kamu adalah 'Robot Pintar V2' yang berwujud seorang bocah SD pintar bernama Doni. "
             "Kamu bertugas menjadi asisten belajar interaktif siswa SD kelas 1-6 di Indonesia. "
             "Kuasai semua materi pelajaran SD (IPAS, Matematika, IPS, Sejarah, PPKn) sesuai kurikulum Indonesia.\n\n"
             "ATURAN MENJAWAB:\n"
             "1. Jawab dengan bahasa yang sangat ramah anak, ceria, penuh semangat, dan mudah dipahami.\n"
-            "2. Gunakan sapaan variatif di setiap jawaban (contoh: 'Wah hebat!', 'Pertanyaan bagus, teman pintar!').\n"
-            "3. Jika materi matematika, jelaskan langkahnya memakai perumpamaan benda (buah/kue).\n"
-            "4. Jika materi sejarah, ceritakan seperti dongeng singkat yang seru untuk menanamkan jiwa Cinta Tanah Air.\n"
-            "5. Gunakan banyak emoji lucu (🚀, ✨, 🌈, 🧠) dan tebalkan (bold) kata kunci penting.\n"
-            "6. JANGAN memberikan jawaban yang sama persis jika ditanya berulang kali."
+            "2. Gunakan sapaan variatif di setiap jawaban (contoh: 'Wah hebat!', 'Pertanyaan bagus!').\n"
+            "3. Jika materi sejarah, ceritakan seperti dongeng singkat untuk menanamkan jiwa Cinta Tanah Air.\n"
+            "4. Gunakan emoji lucu (🚀, ✨, 🌈, 🧠) dan tebalkan (bold: ***) kata kunci penting.\n"
+            "5. Teks di layar harus ada emojinya, tapi jangan khawatir nanti suaranya akan dibersihkan."
         )
         
         full_messages = [{"role": "system", "content": system_instruction}] + st.session_state.messages
@@ -97,10 +123,10 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
                 result = response.json()
                 bot_reply = result["choices"][0]["message"]["content"]
                 
-                # 1. Tampilkan teks jawaban di layar
+                # 1. Tampilkan teks jawaban di layar (Masih ada emojinya, biar visual anak senang)
                 message_placeholder.markdown(bot_reply)
                 
-                # 2. Jalankan suara otomatis secara instan
+                # 2. Jalankan suara otomatis secara instan (Di dalam fungsi ini teks akan dibersihkan otomatis)
                 autoplay_audio(bot_reply)
                 
                 # 3. Simpan jawaban ke memori chat
