@@ -17,9 +17,7 @@ LINK_GAMBAR_DONI = "doni.png"
 WORKER_URL = "https://purple-surf-7511.muhammadridhoashari01.workers.dev"
 # =========================================================================
 
-# Fungsi Pembantu untuk Mengubah Audio gTTS menjadi format yang bisa auto-play di Browser
-def autoplay_audio(text):
-    # FUNGSI PEMUTAR SUARA DONI YANG AMAN DI BROWSER
+# FUNGSI AGAR SUARA DONI LANGSUNG BUNYI OTOMATIS SAAT CHAT MUNCUL
 def autoplay_audio(text):
     try:
         tts = gTTS(text=text, lang='id', slow=False)
@@ -27,10 +25,18 @@ def autoplay_audio(text):
         tts.write_to_fp(fp)
         fp.seek(0)
         
-        # Memunculkan kotak pemutar musik resmi Streamlit di bawah teks
-        st.audio(fp, format="audio/mp3")
+        # Mengubah file suara menjadi kode base64 agar bisa disuntikkan ke HTML
+        b64 = base64.b64encode(fp.read()).decode()
+        
+        # Trik HTML5 Autoplay yang disuntikkan secara rahasia ke dalam web
+        audio_html = f"""
+            <audio autoplay="true">
+            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+            </audio>
+            """
+        st.markdown(audio_html, unsafe_allow_html=True)
     except Exception as e:
-        st.warning(f"Gagal memproses suara: {str(e)}")
+        pass
 
 # 3. TAMPILAN BANNER UTAMA (MEMANGGIL KARAKTER BOCAH SD ANDA)
 st.markdown("<center>", unsafe_allow_html=True)
