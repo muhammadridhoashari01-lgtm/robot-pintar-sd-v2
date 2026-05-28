@@ -8,7 +8,7 @@ import io
 st.set_page_config(page_title="Robot Pintar V2", page_icon="🤖", layout="centered")
 
 # Variabel Global URL Karakter Bocah SD Anda dari Postimages
-LINK_GAMBAR_DONI = "https://i.postimg.cc/mD8zQyN0/Page-title.png"
+LINK_GAMBAR_DONI = "doni.png"
 
 # =========================================================================
 # 2. ALAMAT BACKEND CLOUDFLARE WORKER BARU ANDA
