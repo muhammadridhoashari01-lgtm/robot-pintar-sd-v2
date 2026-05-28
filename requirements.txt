@@ -1,4 +1,5 @@
-streamlit
-requests
-gTTS
-streamlit-mic-recorder
+import streamlit as st
+import requests
+from gtts import gTTS
+import base64  
+import io
