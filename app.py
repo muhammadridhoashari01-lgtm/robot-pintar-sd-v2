@@ -19,20 +19,18 @@ WORKER_URL = "https://purple-surf-7511.muhammadridhoashari01.workers.dev"
 
 # Fungsi Pembantu untuk Mengubah Audio gTTS menjadi format yang bisa auto-play di Browser
 def autoplay_audio(text):
+    # FUNGSI PEMUTAR SUARA DONI YANG AMAN DI BROWSER
+def autoplay_audio(text):
     try:
         tts = gTTS(text=text, lang='id', slow=False)
         fp = io.BytesIO()
         tts.write_to_fp(fp)
         fp.seek(0)
-        b64 = base64.b64encode(fp.read()).decode()
-        md = f"""
-            <audio autoplay="true">
-            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
-            </audio>
-            """
-        st.markdown(md, unsafe_allow_html=True)
+        
+        # Memunculkan kotak pemutar musik resmi Streamlit di bawah teks
+        st.audio(fp, format="audio/mp3")
     except Exception as e:
-        pass
+        st.warning(f"Gagal memproses suara: {str(e)}")
 
 # 3. TAMPILAN BANNER UTAMA (MEMANGGIL KARAKTER BOCAH SD ANDA)
 st.markdown("<center>", unsafe_allow_html=True)
