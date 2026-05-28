@@ -7,7 +7,7 @@ import io
 # 1. KONFIGURASI HALAMAN UTAMA (TEMA CERIA RAMAH ANAK)
 st.set_page_config(page_title="Robot Pintar V2", page_icon="🤖", layout="centered")
 
-# Menggunakan satu gambar diam dari repositori GitHub internal Anda
+# Menggunakan gambar diam yang sudah Anda upload di rumah GitHub Anda
 LINK_GAMBAR_DONI = "doni.png"
 
 # =========================================================================
@@ -38,7 +38,7 @@ def autoplay_audio(text):
     except Exception as e:
         pass
 
-# 4. TAMPILAN BANNER UTAMA (DONI DIAM TAPI TETAP CERIA)
+# 4. TAMPILAN BANNER UTAMA
 st.markdown("<center>", unsafe_allow_html=True)
 st.image(LINK_GAMBAR_DONI, width=180)
 st.title("🤖 Robot Pintar V2")
@@ -52,7 +52,7 @@ for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-# 5. LOGIKA UTAMA PERCAKAPAN CHAT
+# 5. LOGIKA UTAMA PERCAKAPAN CHAT (TANPA MIC RECORDER YANG ERROR)
 if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
     
     # Tampilkan pertanyaan siswa di layar
