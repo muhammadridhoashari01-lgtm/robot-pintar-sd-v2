@@ -95,10 +95,9 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
         full_messages = [{"role": "system", "content": system_instruction}] + st.session_state.messages
 
         payload = {
-            # Menggunakan ID resmi OpenRouter untuk NVIDIA Nemotron 3 Super
-            "model": "nvidia/nemotron-3-super-120b-a12b:free",
+            # Menggunakan model Gemma 4 26B
+            "model": "google/gemma-4-26b-a4b-it:free",
             "messages": full_messages,
-            # Pertahankan suhu rendah agar logika dan penalaran Sejarah/Matematika tetap akurat
             "temperature": 0.3,
             "max_tokens": 550
         }
