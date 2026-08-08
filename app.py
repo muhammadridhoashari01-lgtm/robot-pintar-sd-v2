@@ -4,7 +4,7 @@ import asyncio
 import base64
 import edge_tts
 import io
-import re  
+import re
 
 # 1. KONFIGURASI HALAMAN UTAMA (TEMA CERIA RAMAH ANAK)
 st.set_page_config(page_title="Robot Pintar V2", page_icon="🤖", layout="centered")
@@ -39,24 +39,19 @@ async def generate_edge_audio(text):
 # FUNGSI UTAMA SUPAYA SUARA LANGSUNG AUTOPLAY DI WEB
 def autoplay_audio(text):
     try:
-       if response.status_code == 200:
-                result = response.json()
-                bot_reply = result["choices"][0]["message"]["content"]
-                
-                # 1. Tampilkan teks jawaban asli (lengkap dengan emoji dan gaya tebal) di layar
-                message_placeholder.markdown(bot_reply)
-                
-                # --- PROSES PEMBERSIHAN TEKS KHUSUS UNTUK SUARA ---
-                # Hapus tanda bintang (*) dan tanda pagar (#)
-                teks_suara = bot_reply.replace("*", "").replace("#", "")
-                # Hapus semua emoji dan simbol matematika rumit agar Doni tidak gagap
-                teks_suara = re.sub(r'[^\w\s,.?!-]', '', teks_suara)
-                
-                # 2. Jalankan suara otomatis menggunakan teks yang SUDAH BERSIH
-                autoplay_audio(teks_suara)
-                
-                # 3. Simpan jawaban asli ke memori chat
-                st.session_state.messages.append({"role": "assistant", "content": bot_reply})
+        # Jalankan fungsi async edge-tts di dalam fungsi biasa Streamlit
+        audio_bytes = asyncio.run(generate_edge_audio(text))
+        
+        # Ubah data audio menjadi format base64 agar bisa di-autoplay oleh HTML5
+        b64 = base64.b64encode(audio_bytes).decode()
+        audio_html = f"""
+            <audio autoplay="true">
+            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+            </audio>
+            """
+        st.markdown(audio_html, unsafe_allow_html=True)
+    except Exception as e:
+        st.warning(f"Gagal memproses suara: {str(e)}")
 
 # 4. TAMPILAN BANNER UTAMA
 st.markdown("<center>", unsafe_allow_html=True)
@@ -99,7 +94,6 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
         
         full_messages = [{"role": "system", "content": system_instruction}] + st.session_state.messages
 
-   
         payload = {
             "model": "openai/gpt-oss-20b:free",
             "messages": full_messages,
@@ -120,8 +114,12 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
                 # 1. Tampilkan teks jawaban di layar
                 message_placeholder.markdown(bot_reply)
                 
+                # --- PROSES PEMBERSIHAN TEKS KHUSUS UNTUK SUARA ---
+                teks_suara = bot_reply.replace("*", "").replace("#", "")
+                teks_suara = re.sub(r'[^\w\s,.?!-]', '', teks_suara)
+                
                 # 2. Jalankan suara otomatis Edge-TTS secara instan
-                autoplay_audio(bot_reply)
+                autoplay_audio(teks_suara)
                 
                 # 3. Simpan jawaban ke memori chat
                 st.session_state.messages.append({"role": "assistant", "content": bot_reply})
