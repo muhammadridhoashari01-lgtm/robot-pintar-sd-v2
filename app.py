@@ -95,9 +95,11 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
         full_messages = [{"role": "system", "content": system_instruction}] + st.session_state.messages
 
         payload = {
-            "model": "openai/gpt-oss-20b:free",
+            # Menggunakan Gemma 4 26B A4B versi gratis dari OpenRouter
+            "model": "google/gemma-4-26b-a4b:free",
             "messages": full_messages,
-            "temperature": 0.9,
+            # Pastikan temperature tetap rendah (0.3 atau 0.4) agar Doni tidak kembali ngehalu
+            "temperature": 0.3, 
             "max_tokens": 550
         }
         
