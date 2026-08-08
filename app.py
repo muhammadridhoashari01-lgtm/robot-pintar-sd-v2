@@ -94,10 +94,11 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
         
         full_messages = [{"role": "system", "content": system_instruction}] + st.session_state.messages
 
-        payload = {
-            # Kembali ke model Gemma 2 yang terbukti paling stabil di OpenRouter
-            "model": "google/gemma-2-9b-it:free", 
+       payload = {
+            # Menggunakan format ID resmi OpenRouter untuk Gemma 4 31B versi gratis
+            "model": "google/gemma-4-31b-it:free",
             "messages": full_messages,
+            # Pertahankan suhu rendah agar jawaban Doni tetap faktual dan logis
             "temperature": 0.3,
             "max_tokens": 550
         }
