@@ -94,14 +94,13 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
         
         full_messages = [{"role": "system", "content": system_instruction}] + st.session_state.messages
 
-     payload = {
-            # Menggunakan format ID resmi OpenRouter untuk Gemma 4 31B versi gratis
+        payload = {
             "model": "google/gemma-4-31b-it:free",
             "messages": full_messages,
-            # Pertahankan suhu rendah agar jawaban Doni tetap faktual dan logis
             "temperature": 0.3,
             "max_tokens": 550
         }
+        
         headers = {"Content-Type": "application/json"}
 
         try:
@@ -110,10 +109,9 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
             
             if response.status_code == 200:
                 result = response.json()
-                # Menggunakan .get() agar tidak langsung error jika 'content' tidak ada
                 bot_reply = result["choices"][0]["message"].get("content")
                 
-                # --- JARING PENGAMAN: JIKA AI SEDANG MELAMUN / JAWABAN KOSONG ---
+                # Jaring pengaman jika AI sedang melamun
                 if bot_reply is None:
                     bot_reply = "Aduh, maaf ya teman pintar! Pikiran Doni tiba-tiba nge-blank. Bisa tanya sekali lagi? 😅🚀"
                 
