@@ -95,8 +95,10 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
         full_messages = [{"role": "system", "content": system_instruction}] + st.session_state.messages
 
         payload = {
-            "model": "google/gemma-4-31b-it:free",
+            # Menggunakan model NVIDIA Nemotron (versi gratis terbaik di OpenRouter)
+            "model": "nvidia/llama-3.1-nemotron-70b-instruct:free",
             "messages": full_messages,
+            # Suhu tetap dijaga di 0.3 agar penjelasan sejarah dan matematika selalu faktual
             "temperature": 0.3,
             "max_tokens": 550
         }
