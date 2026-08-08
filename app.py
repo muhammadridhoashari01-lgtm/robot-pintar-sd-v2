@@ -100,7 +100,6 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
             "temperature": 0.9,
             "max_tokens": 550
         }
-        }
         
         headers = {"Content-Type": "application/json"}
 
