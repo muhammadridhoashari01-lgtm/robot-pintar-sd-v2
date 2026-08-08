@@ -94,7 +94,7 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
         
         full_messages = [{"role": "system", "content": system_instruction}] + st.session_state.messages
 
-       payload = {
+     payload = {
             # Menggunakan format ID resmi OpenRouter untuk Gemma 4 31B versi gratis
             "model": "google/gemma-4-31b-it:free",
             "messages": full_messages,
@@ -102,7 +102,6 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
             "temperature": 0.3,
             "max_tokens": 550
         }
-        
         headers = {"Content-Type": "application/json"}
 
         try:
