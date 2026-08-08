@@ -109,7 +109,12 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
             
             if response.status_code == 200:
                 result = response.json()
-                bot_reply = result["choices"][0]["message"]["content"]
+                # Menggunakan .get() agar tidak langsung error jika 'content' tidak ada
+                bot_reply = result["choices"][0]["message"].get("content")
+                
+                # --- JARING PENGAMAN: JIKA AI SEDANG MELAMUN / JAWABAN KOSONG ---
+                if bot_reply is None:
+                    bot_reply = "Aduh, maaf ya teman pintar! Pikiran Doni tiba-tiba nge-blank. Bisa tanya sekali lagi? 😅🚀"
                 
                 # 1. Tampilkan teks jawaban di layar
                 message_placeholder.markdown(bot_reply)
