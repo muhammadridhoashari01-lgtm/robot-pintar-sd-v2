@@ -94,7 +94,7 @@ if user_input := st.chat_input("Tulis pertanyaan belajarmu di sini..."):
         full_messages = [{"role": "system", "content": system_instruction}] + st.session_state.messages
 
         payload = {
-            model = "openai/gpt-oss-20b:free",
+            "model = "openai/gpt-oss-20b:free",
             "messages": full_messages,
             "temperature": 0.9,
             "max_tokens": 550
